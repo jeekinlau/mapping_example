@@ -8,20 +8,27 @@ output:
     toc_float: 
       collapsed: false
 ---
-# Introduction
-This is a tutorial using a very clean dataset from array generated data on a well characterized dataset that has been published already https://www.frontiersin.org/articles/10.3389/fpls.2022.916231/full     
 
-To download the dataset please go to https://github.com/jeekinlau/mapping_example/tree/main/data
+# Introduction
+
+This is a tutorial using a very clean dataset from array generated data on a well characterized dataset that has been published already [Rose Rosette Disease Resistance Loci Detected in Two Interconnected Tetraploid Garden Rose Populations](https://www.frontiersin.org/articles/10.3389/fpls.2022.916231/full)
+
+To download the dataset please go to <https://github.com/jeekinlau/mapping_example/tree/main/data>
 
 # Import the data
 
 Download the dataset and import the dataset into R
 
-
 ```{r}
 library(mappoly)
 dat = read_geno_csv(file="data/BExMG_subset.csv", ploidy = 4)
 ```
+
+# Filtering Data
+
+## Filter by missing data
+
+Typically, there will be many markers filtered out when filtered by marker, or by individual. Because this is a very well curated dataset, There are no markers filtered out.
 
 ```{r}
 ## Filtering dataset by marker
@@ -33,8 +40,9 @@ dat = filter_missing(input.data = dat, type = "individual",
 dat
 ```
 
+## Filter by segregation distortion
 
-
+Also very few markers removed due to good dataset. The figure below shows the marker types, the dosage of all the marker types, and the segregation distortion of the markers.
 
 ```{r}
 ## Filter according to segregation test
@@ -46,6 +54,9 @@ seq.init
 plot(seq.init)
 ```
 
+# Calculating recombination fractions
+
+This step allows for the pairwise recombination fraction calculation between all markers. If you computer has multiple cores use the 'parallel::detectCores()' function to find out how many cores your local computer has. This step takes a while especially with a laptop with limited cores and RAM memory. (**there are tricks around this email me for alternative strategies around this**)
 
 ```{r}
 ## Accounting for recombination fractions
@@ -55,10 +66,20 @@ all.rf.pairwise = est_pairwise_rf(input.seq = seq.init, ncpus = 6)
 ```
 
 
+
+
+
+## Plotting RF matrix
+Plotting the RF matrix shows a heat map of markers that are closely linked versus those that are far away. Naturally we see that those markers group into the 7 chromosomes of the Rose genome.
+
 ```{r}
 mat = rf_list_to_matrix(all.rf.pairwise)
 plot(mat)
 ```
+
+
+# Grouping
+Next step is to group the markers into a list containing the necessary objects needed for mapping (ie markers and thier two point rf estimate and a sequence of markers). There are several ways to approach this. Below we compare the grouping using UPGMA method, genomic (physical position according to genome position), and an intersect between the two.
 
 ```{r}
 ## Getting group information (UPGMA)
@@ -69,7 +90,6 @@ grs = group_mappoly(input.mat = mat,
 grs
 plot(grs)
 ```
-
 
 ```{r}
 ## Making groups with intersection between UPGMA (rf) + genomic information (discards scaffolds)
@@ -82,15 +102,15 @@ for(j in 1:7){
   tpt2 = make_pairs_mappoly(tpt, input.seq = temp2)
   LGS.inter[[as.numeric(names(table(temp2$chrom))[which.max(table(temp2$chrom))])]] = list(seq = temp2, tpt = tpt2)
 }
-## Getting rf matrices
-rfs.inter = lapply(LGS.inter, function(x) rf_list_to_matrix(x$tpt))
-## Plotting rf matrices
-#png(file="UPGMA_Genomic.png", width = 1600, height = 800)
-par(mfrow=c(2,4))
-for (i in 1:length(rfs.inter)){plot(rfs.inter[[i]])}
-mtext("Linkage groups with\nUPGMA + genomic information\n(discarding scaffolds)", cex = 2, side = 3, line = -63, at = 0.88, outer = TRUE)
-par(mfrow=c(1,1))
-#dev.off()
+# ## Getting rf matrices
+# rfs.inter = lapply(LGS.inter, function(x) rf_list_to_matrix(x$tpt))
+# ## Plotting rf matrices
+# #png(file="UPGMA_Genomic.png", width = 1600, height = 800)
+# par(mfrow=c(2,4))
+# for (i in 1:length(rfs.inter)){plot(rfs.inter[[i]])}
+# mtext("Linkage groups with\nUPGMA + genomic information\n(discarding scaffolds)", cex = 2, side = 3, line = -63, at = 0.88, outer = TRUE)
+# par(mfrow=c(1,1))
+# #dev.off()
 
 ## Making groups only with genomic information (tends to bring more markers, but also discards scaffolds)
 LGS.genomic = vector("list", 7)
@@ -103,15 +123,15 @@ for (i in 1:7){
   temptpt2 = make_pairs_mappoly(temptpt, input.seq = rffilt)
   LGS.genomic[[as.numeric(unique(rffilt$chrom))]] = list(seq = rffilt, tpt = temptpt2)
 }
-## Getting rf matrices
-rfs.genomic = lapply(LGS.genomic, function(x) rf_list_to_matrix(x$tpt))
-## Plotting rf matrices
-#png(file="Genomic.png", width = 1600, height = 800)
-par(mfrow=c(2,4))
-for (i in 1:length(rfs.genomic)){plot(rfs.genomic[[i]])}
-mtext("Linkage groups with\ngenomic information\n(discarding scaffolds)", cex = 2, side = 3, line = -63, at = 0.88, outer = TRUE)
-par(mfrow=c(1,1))
-#dev.off()
+# ## Getting rf matrices
+# rfs.genomic = lapply(LGS.genomic, function(x) rf_list_to_matrix(x$tpt))
+# ## Plotting rf matrices
+# #png(file="Genomic.png", width = 1600, height = 800)
+# par(mfrow=c(2,4))
+# for (i in 1:length(rfs.genomic)){plot(rfs.genomic[[i]])}
+# mtext("Linkage groups with\ngenomic information\n(discarding scaffolds)", cex = 2, side = 3, line = -63, at = 0.88, outer = TRUE)
+# par(mfrow=c(1,1))
+# #dev.off()
 
 ## Making groups with UPGMA (rf) information (includes scaffolds)
 LGS.upgma=vector("list", 7)
@@ -122,15 +142,15 @@ for(j in 1:7){
   tpt2 = make_pairs_mappoly(tpt, input.seq = temp2)
   LGS.upgma[[as.numeric(names(table(temp2$chrom))[which.max(table(temp2$chrom))])]] = list(seq = temp2, tpt = tpt2)
 }
-## Getting rf matrices
-rfs = lapply(LGS.upgma, function(x) rf_list_to_matrix(x$tpt))
-## Plotting rf matrices
-#png(file="UPGMA.png", width = 1600, height = 800)
-par(mfrow=c(2,4))
-for (i in 1:length(rfs)){plot(rfs[[i]])}
-mtext("Linkage groups with\nUPGMA information\n(including scaffolds)", cex = 2, side = 3, line = -63, at = 0.88, outer = TRUE)
-par(mfrow=c(1,1))
-#dev.off()
+# ## Getting rf matrices
+# rfs = lapply(LGS.upgma, function(x) rf_list_to_matrix(x$tpt))
+# ## Plotting rf matrices
+# #png(file="UPGMA.png", width = 1600, height = 800)
+# par(mfrow=c(2,4))
+# for (i in 1:length(rfs)){plot(rfs[[i]])}
+# mtext("Linkage groups with\nUPGMA information\n(including scaffolds)", cex = 2, side = 3, line = -63, at = 0.88, outer = TRUE)
+# par(mfrow=c(1,1))
+# #dev.off()
 
 ## Comparing number of markers in each group
 comp = data.frame(UPGMA_Genomic = unlist(lapply(LGS.inter, function(x) length(x$seq$seq.num))),
@@ -142,9 +162,17 @@ comp
 ```
 
 
+We see that all three are very similar and for the purpose of this example lets just take the upgma grouping and run with that.
+
+
 ```{r}
 LGS<-LGS.upgma
 ```
+
+
+
+# HMM chain
+The HMM chain is used to order the markers. Below is a example of just ordering one chromosome. Later we will show how to parallelize this task by chromosome. (NOTE the map is only running quickly here because of the small number of markers and the good quality of the data)
 
 ```{r}
 single_chrom <- est_rf_hmm_sequential(input.seq = LGS[[1]]$seq,
@@ -162,10 +190,16 @@ single_chrom <- est_rf_hmm_sequential(input.seq = LGS[[1]]$seq,
 plot(single_chrom)
 ```
 
+
+
+
+
+## Parallel construction of all 7 LGs
+
 ```{r}
 ## Performing parallel computation of hidden markov 
 phasing_and_hmm_rf <- function(X){
-  fl <- paste0("output_map_ch_", X$ch, ".txt")
+  fl <- paste0("output_map_ch_", unique(X$seq$chrom), ".txt")
   sink(fl)
   map <- est_rf_hmm_sequential(input.seq = X$seq,
                                start.set = 3,
@@ -211,12 +245,19 @@ plot_map_list(MAPs.err, col = "ggstyle")
 ```
 
 
+After constructing the maps a 5% global error rate is applied to the chain to allow for the chain to make small changes that correct for possible genotyping error. The difference is seen the the picture above where the second map is shorter indicating a better map. 
+```{r}
+plot_genome_vs_map(MAPs.err, same.ch.lg = T)
+summary_maps(MAPs.err)
+```
 
 
+# Genotypic probabilites for use in QTL mapping
+Genotypic probabilites will be used in QTL mapping thus we need to save this for use in next session
+```{r}
+genoprob.err <- vector("list", 7)
+for(i in 1:7)
+   genoprob.err[[i]] <- calc_genoprob_error(input.map = MAPs.err[[i]], error = 0.05)
 
-
-
-
-
-
-
+saveRDS(genoprob.err, file="genoprob.err.RDS")
+```
