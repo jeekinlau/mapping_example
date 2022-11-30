@@ -11,9 +11,11 @@ output:
 
 # Introduction
 
-This is a tutorial using a very clean dataset from array generated data on a well characterized dataset that has been published already [Rose Rosette Disease Resistance Loci Detected in Two Interconnected Tetraploid Garden Rose Populations](https://www.frontiersin.org/articles/10.3389/fpls.2022.916231/full)
+This is a tutorial using a very clean dataset from array generated data on a well characterized autotetraploid garden rose mapping population that has been published already [Rose Rosette Disease Resistance Loci Detected in Two Interconnected Tetraploid Garden Rose Populations](https://www.frontiersin.org/articles/10.3389/fpls.2022.916231/full)
 
 To download the dataset please go to <https://github.com/jeekinlau/mapping_example/tree/main/data>
+
+<https://raw.githubusercontent.com/jeekinlau/mapping_example/main/Mapping_Example.html>
 
 # Import the data
 
