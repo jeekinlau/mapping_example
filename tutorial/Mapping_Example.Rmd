@@ -1,7 +1,7 @@
 ---
 title: "Mapping Example"
 author: "Jeekin Lau"
-date: "Updated: 11/29/2022"
+date: "Updated: 11/30/2022"
 output:   
   html_document:
     toc: true
@@ -15,20 +15,26 @@ This is a tutorial using a very clean dataset from array generated data on a wel
 
 To download the dataset please go to <https://github.com/jeekinlau/mapping_example/tree/main/data>
 
-<https://raw.githubusercontent.com/jeekinlau/mapping_example/main/Mapping_Example.html>
+Tutorial link:
+
+<https://jeekinlau.github.io/mapping_example/tutorial/Mapping_Example.html>
 
 # Import the data
 
-Download the dataset and import the dataset into R
+Download the dataset and import the dataset into R. The data is organized in a way that mappoly recognizes it. must be in this format if you want to use `mappoly::read_geno_csv()` to read in your data. If you have a vcf file you can also use `mappoly::read_vcf()`
+
 
 ```{r}
+setwd("~/GitHub/mapping_example/tutorial")
 library(mappoly)
-dat = read_geno_csv(file="data/BExMG_subset.csv", ploidy = 4)
+dat = read_geno_csv(file="../data/BExMG_subset.csv", ploidy = 4)
+
 ```
 
 # Filtering Data
 
 ## Filter by missing data
+![CSV input file](../figures/input_file_csv.jpg)
 
 Typically, there will be many markers filtered out when filtered by marker, or by individual. Because this is a very well curated dataset, There are no markers filtered out. Start with 0.05 but there are no "rules" for what level to use.
 
@@ -271,15 +277,10 @@ screened_data <- screen_for_duplicate_individuals(dosage_matrix = ALL_dosages,
 PCA_progeny(screened_data)
 ```
 
-```{r}
-data=read.csv("data/BExMG_subset.csv")
 
-removed_dups=cbind(data[,1:5],screened_data[,3:ncol(screened_data)])
-
-```
 
 ```{r}
-dat = read_geno_csv(file="data/BExMG_subset_removed_dup.csv", ploidy = 4)
+dat = read_geno_csv(file="../data/BExMG_subset_removed_dup.csv", ploidy = 4)
 ## Filtering dataset by marker
 dat = filter_missing(input.data = dat, type = "marker", 
                       filter.thres = 0.05, inter = F)
@@ -292,6 +293,7 @@ mrks.chi.filt = filter_segregation(dat, chisq.pval.thres =  pval.bonf, inter = F
 seq.init = make_seq_mappoly(mrks.chi.filt)
 ## Accounting for recombination fractions
 all.rf.pairwise = est_pairwise_rf(input.seq = seq.init, ncpus = 6)
+mat = rf_list_to_matrix(all.rf.pairwise)
 ## Getting group information (UPGMA)
 grs = group_mappoly(input.mat = mat,
                      expected.groups = 7,
