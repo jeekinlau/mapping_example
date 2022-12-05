@@ -41,10 +41,10 @@ Typically, there will be many markers filtered out when filtered by marker, or b
 ```{r}
 ## Filtering dataset by marker
 dat = filter_missing(input.data = dat, type = "marker", 
-                      filter.thres = 0.05, inter = F)
+                      filter.thres = 0.10, inter = F)
 ## Filtering dataset by individual
 dat = filter_missing(input.data = dat, type = "individual", 
-                      filter.thres = 0.05, inter = F)
+                      filter.thres = 0.10, inter = F)
 dat
 ```
 
@@ -169,7 +169,7 @@ comp
 We see that all three are very similar and for the purpose of this example lets just take the upgma grouping and run with that.
 
 ```{r}
-LGS<-LGS.upgma
+LGS<-LGS.inter
 ```
 
 # HMM chain
@@ -393,4 +393,12 @@ plot_map_list(MAPs_nodup.err, col = "ggstyle")
 
 summary_maps(MAPs.err)
 summary_maps(MAPs_nodup.err)
+
+
+genoprob.err <- vector("list", 7)
+for(i in 1:7)
+   genoprob.err[[i]] <- calc_genoprob_error(input.map = MAPs_nodup.err[[i]], error = 0.05)
+
+saveRDS(genoprob.err, file="genoprob.err.nodup.RDS")
+
 ```

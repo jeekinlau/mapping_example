@@ -1,0 +1,67 @@
+---
+title: "QTL Example"
+author: "Jeekin Lau"
+date: "Updated: 11/30/2022"
+output:   
+  html_document:
+    toc: true
+    toc_float: 
+      collapsed: false
+---
+
+```{r}
+library(mappoly)
+library(qtlpoly)
+
+
+genoprob = readRDS("genoprob.err.nodup.RDS")
+phenotype=read.csv("../data/pheno_RRD.csv",row.names = 1)
+data = read_data(ploidy = 4, geno.prob = genoprob, pheno = phenotype, step = 1)
+```
+
+
+```{r,eval=FALSE}
+data.sim <- simulate_qtl(data = data, mu = 0, h2.qtl = NULL, var.error = 1, 
+    n.sim = 1000, missing = TRUE, seed = 123)
+score.null <- null_model(data = data.sim$results, n.clusters = 1, plot = NULL)
+
+min.pvl <- numeric(length(score.null$results))
+for (p in 1:length(score.null$results)) {
+    min.pvl[p] <- score.null$results[[p]]$pval[which.max(score.null$results[[p]]$stat)]
+}
+quantile(sort(min.pvl), c(0.2, 0.05))
+
+```
+
+
+```{r}
+
+score.null=readRDS("score.null.RDS")
+remim.mod <- remim(data = data, score.null = score.null,  sig.fwd = 0.2, sig.bwd = 0.05, w.size = 15, d.sint = 1.5, n.clusters = 4)
+```
+
+
+```{r}
+plot_profile(data = data, model = remim.mod, grid = TRUE, sup.int =T)
+```
+
+```{r}
+plot_sint(data = data, model = remim.mod)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
