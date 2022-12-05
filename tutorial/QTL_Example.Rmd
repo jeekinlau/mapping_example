@@ -53,6 +53,12 @@ plot_sint(data = data, model = remim.mod)
 
 
 
+```{r}
+fitted.mod <- fit_model(data = data, model = remim.mod, probs = "joint", polygenes = "none")
+summary(fitted.mod)
+est.effects <- qtl_effects(ploidy = 4, fitted = fitted.mod)
+plot(est.effects)
+```
 
 
 
