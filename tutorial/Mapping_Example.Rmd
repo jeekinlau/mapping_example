@@ -11,7 +11,7 @@ output:
 
 # Introduction
 
-This is a tutorial using a very clean dataset from array generated data on a well characterized autotetraploid garden rose mapping population that has been published already [Rose Rosette Disease Resistance Loci Detected in Two Interconnected Tetraploid Garden Rose Populations](https://www.frontiersin.org/articles/10.3389/fpls.2022.916231/full)
+This is a tutorial using a very clean dataset from array generated data on a well characterized autotetraploid garden rose mapping population that has been published already [Rose Rosette Disease Resistance Loci Detected in Two Interconnected Tetraploid Garden Rose Populations](https://www.frontiersin.org/articles/10.3389/fpls.2022.916231/full).
 
 To download the dataset please go to <https://github.com/jeekinlau/mapping_example/tree/main/data>
 
@@ -23,7 +23,6 @@ Tutorial link:
 
 Download the dataset and import the dataset into R. The data is organized in a way that mappoly recognizes it. must be in this format if you want to use `mappoly::read_geno_csv()` to read in your data. If you have a vcf file you can also use `mappoly::read_vcf()`
 
-
 ```{r}
 setwd("~/GitHub/mapping_example/tutorial")
 library(mappoly)
@@ -31,20 +30,25 @@ dat = read_geno_csv(file="../data/BExMG_subset.csv", ploidy = 4)
 
 ```
 
+```{r, eval=FALSE}
+dat_vcf_test = read_vcf("../data/sweetpotato_chr1.vcf.gz", parent.1 = "PARENT1", parent.2 = "PARENT2")
+```
+
 # Filtering Data
 
 ## Filter by missing data
+
 ![CSV input file](../figures/input_file_csv.jpg)
 
 Typically, there will be many markers filtered out when filtered by marker, or by individual. Because this is a very well curated dataset, There are no markers filtered out. Start with 0.05 but there are no "rules" for what level to use.
 
-```{r}
+```{r, eval=F}
 ## Filtering dataset by marker
 dat = filter_missing(input.data = dat, type = "marker", 
-                      filter.thres = 0.10, inter = F)
+                      filter.thres = 0.5, inter = F)
 ## Filtering dataset by individual
 dat = filter_missing(input.data = dat, type = "individual", 
-                      filter.thres = 0.10, inter = F)
+                      filter.thres = 0.5, inter = F)
 dat
 ```
 
@@ -57,6 +61,7 @@ Also very few markers removed due to good dataset. The figure below shows the ma
 pval.bonf = 0.05/dat$n.mrk
 mrks.chi.filt = filter_segregation(dat, chisq.pval.thres =  pval.bonf, inter = F)
 seq.init = make_seq_mappoly(mrks.chi.filt)
+
 seq.init
 
 plot(seq.init)
@@ -261,9 +266,17 @@ for(i in 1:7)
 saveRDS(genoprob.err, file="genoprob.err.RDS")
 ```
 
+## Genotypic changes
+
+changes in genotypic dosage calls that the HMM chain makes can be observed below
+
+![changes in dosage](../figures/genotype_imputation_changes.jpeg){width="1500"}
+
 # working in polymapR
 
 polymapR has the advantage of lower computational overhead, however less automatic and clustering may be more difficult. However if you want to work with this platform, you can use export the mappoly.data
+
+polymapR also has some tools that mappoly does not have like `screen_for_duplicate_individuals()` and `PCA_progeny()`
 
 ```{r}
 library(polymapR)
@@ -275,130 +288,4 @@ screened_data <- screen_for_duplicate_individuals(dosage_matrix = ALL_dosages,
                                                    plot_cor = T)
 
 PCA_progeny(screened_data)
-```
-
-
-
-```{r}
-dat = read_geno_csv(file="../data/BExMG_subset_removed_dup.csv", ploidy = 4)
-## Filtering dataset by marker
-dat = filter_missing(input.data = dat, type = "marker", 
-                      filter.thres = 0.05, inter = F)
-## Filtering dataset by individual
-dat = filter_missing(input.data = dat, type = "individual", 
-                      filter.thres = 0.05, inter = F)
-## Filter according to segregation test
-pval.bonf = 0.05/dat$n.mrk
-mrks.chi.filt = filter_segregation(dat, chisq.pval.thres =  pval.bonf, inter = F)
-seq.init = make_seq_mappoly(mrks.chi.filt)
-## Accounting for recombination fractions
-all.rf.pairwise = est_pairwise_rf(input.seq = seq.init, ncpus = 6)
-mat = rf_list_to_matrix(all.rf.pairwise)
-## Getting group information (UPGMA)
-grs = group_mappoly(input.mat = mat,
-                     expected.groups = 7,
-                     comp.mat = TRUE, 
-                     inter = F)
-grs
-
-## Making groups with intersection between UPGMA (rf) + genomic information (discards scaffolds)
-
-LGS.inter=vector("list", 7)
-for(j in 1:7){
-  temp1 = make_seq_mappoly(grs, j, genomic.info=1)
-  tpt = make_pairs_mappoly(all.rf.pairwise, input.seq = temp1)
-  temp2 = rf_snp_filter(input.twopt = tpt, diagnostic.plot = FALSE)
-  tpt2 = make_pairs_mappoly(tpt, input.seq = temp2)
-  LGS.inter[[as.numeric(names(table(temp2$chrom))[which.max(table(temp2$chrom))])]] = list(seq = temp2, tpt = tpt2)
-}
-
-
-## Making groups only with genomic information (tends to bring more markers, but also discards scaffolds)
-LGS.genomic = vector("list", 7)
-for (i in 1:7){
-  tempseq1 = make_seq_mappoly(dat, arg = paste0("seq",i), genomic.info = 1)
-  mrks = intersect(tempseq1$seq.mrk.names, seq.init$seq.mrk.names)
-  tempseq = make_seq_mappoly(dat, arg = mrks)
-  temptpt = make_pairs_mappoly(all.rf.pairwise, input.seq = tempseq)
-  rffilt = rf_snp_filter(input.twopt = temptpt, diagnostic.plot = FALSE)
-  temptpt2 = make_pairs_mappoly(temptpt, input.seq = rffilt)
-  LGS.genomic[[as.numeric(unique(rffilt$chrom))]] = list(seq = rffilt, tpt = temptpt2)
-}
-
-
-## Making groups with UPGMA (rf) information (includes scaffolds)
-LGS.upgma=vector("list", 7)
-for(j in 1:7){
-  temp1 = make_seq_mappoly(grs, j)
-  tpt = make_pairs_mappoly(all.rf.pairwise, input.seq = temp1)
-  temp2 = rf_snp_filter(input.twopt = tpt, diagnostic.plot = FALSE)
-  tpt2 = make_pairs_mappoly(tpt, input.seq = temp2)
-  LGS.upgma[[as.numeric(names(table(temp2$chrom))[which.max(table(temp2$chrom))])]] = list(seq = temp2, tpt = tpt2)
-}
-
-
-## Comparing number of markers in each group
-comp = data.frame(UPGMA_Genomic = unlist(lapply(LGS.inter, function(x) length(x$seq$seq.num))),
-                  Genomic = unlist(lapply(LGS.genomic, function(x) length(x$seq$seq.num))),
-                  UPGMA = unlist(lapply(LGS.upgma, function(x) length(x$seq$seq.num))))
-comp
-
-LGS<-LGS.upgma
-
-## Performing parallel computation of hidden markov 
-phasing_and_hmm_rf <- function(X){
-  fl <- paste0("output_map_ch_", unique(X$seq$chrom), ".txt")
-  sink(fl)
-  map <- est_rf_hmm_sequential(input.seq = X$seq,
-                               start.set = 3,
-                               thres.twopt = 10,
-                               thres.hmm = 50,
-                               extend.tail = 30,
-                               twopt = X$tpt,
-                               verbose = TRUE,
-                               phase.number.limit = 20,
-                               sub.map.size.diff.limit = 5) 
-  sink()
-  return(map)
-}
-
-
-# 5% genotyping error
-my.error.func<-function(X){
-  x<-est_full_hmm_with_global_error(input.map = X, 
-                                    error = 0.05, 
-                                    tol = 10e-4, 
-                                    verbose = FALSE)
-  return(x)
-}
-#upgma
-#hidden markov based off physical location
-cl <- parallel::makeCluster(7)
-parallel::clusterEvalQ(cl, require(mappoly))
-parallel::clusterExport(cl, "dat")
-MAPs_nodup <- parallel::parLapply(cl,LGS, phasing_and_hmm_rf)
-parallel::stopCluster(cl)
-
-# account for error
-cl <- parallel::makeCluster(7)
-parallel::clusterEvalQ(cl, require(mappoly))
-
-parallel::clusterExport(cl, "dat")
-MAPs_nodup.err <- parallel::parLapply(cl,MAPs_nodup,my.error.func)
-parallel::stopCluster(cl)
-
-par(mfrow=c(2,1))
-plot_map_list(MAPs.err, col = "ggstyle")
-plot_map_list(MAPs_nodup.err, col = "ggstyle")
-
-summary_maps(MAPs.err)
-summary_maps(MAPs_nodup.err)
-
-
-genoprob.err <- vector("list", 7)
-for(i in 1:7)
-   genoprob.err[[i]] <- calc_genoprob_error(input.map = MAPs_nodup.err[[i]], error = 0.05)
-
-saveRDS(genoprob.err, file="genoprob.err.nodup.RDS")
-
 ```
