@@ -277,9 +277,9 @@ PCA_progeny(screened_data)
 ```
 
 
+# Rerun map
 
-
-Okay now that we found some duplicates, lets remove them from the dataset and rerun everything from the top... it should not tak that long maybe max 10 min
+Okay now that we found some duplicates, lets remove them from the dataset and rerun everything from the top... it should not take that long maybe max 10 min
 
 ```{r}
 dat = read_geno_csv(file="../data/BExMG_subset_removed_dup.csv", ploidy = 4)
