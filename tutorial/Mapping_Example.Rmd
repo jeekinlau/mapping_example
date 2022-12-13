@@ -8,10 +8,12 @@ output:
     toc_float: 
       collapsed: false
 ---
+
 ```{r set-options, echo=FALSE, cache=FALSE}
 options(width = 100)
 
 ```
+
 # Introduction
 
 This is a tutorial using a very clean dataset from array generated data on a well characterized autotetraploid garden rose mapping population that has been published already [Rose Rosette Disease Resistance Loci Detected in Two Interconnected Tetraploid Garden Rose Populations](https://www.frontiersin.org/articles/10.3389/fpls.2022.916231/full)
@@ -33,6 +35,13 @@ dat = read_geno_csv(file="../data/BExMG_subset.csv", ploidy = 4)
 
 ```
 
+
+Just a demonstration of using a vcf as input
+```{r, eval=F}
+dat_vcf = read_vcf("../data/sweetpotato_chr1.vcf.gz", parent.1 = "PARENT1", parent.2 = "PARENT2",ploidy = 6)
+```
+
+
 # Filtering Data
 
 ## Filter by missing data
@@ -45,6 +54,7 @@ Typically, there will be many markers filtered out when filtered by marker, or b
 ## Filtering dataset by marker
 dat = filter_missing(input.data = dat, type = "marker", 
                       filter.thres = 0.10, inter = F)
+
 ## Filtering dataset by individual
 dat = filter_missing(input.data = dat, type = "individual", 
                       filter.thres = 0.10, inter = F)
@@ -266,6 +276,11 @@ screened_data <- screen_for_duplicate_individuals(dosage_matrix = ALL_dosages,
 PCA_progeny(screened_data)
 ```
 
+
+
+
+Okay now that we found some duplicates, lets remove them from the dataset and rerun everything from the top... it should not tak that long maybe max 10 min
+
 ```{r}
 dat = read_geno_csv(file="../data/BExMG_subset_removed_dup.csv", ploidy = 4)
 ## Filtering dataset by marker
@@ -389,5 +404,3 @@ for(i in 1:7)
 saveRDS(genoprob.err, file="genoprob.err.nodup.RDS")
 
 ```
-
-
