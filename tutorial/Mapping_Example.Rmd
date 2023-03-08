@@ -1,7 +1,7 @@
 ---
-title: "Mapping Example"
+title: "Mapping Example Tools for Polyploid RGC11"
 author: "Jeekin Lau"
-date: "Updated: 11/30/2022"
+date: "2023-03-17"
 output:   
   html_document:
     toc: true
@@ -16,11 +16,11 @@ options(width = 100)
 
 # Prerequisites
 
-For this tutorial, you will need to install `mappoly` `polymapr` `qtlpoly` `viewpoly`. If you want to download the stable version and the versions please run the following lines
+For this tutorial, you will need to install `mappoly` `polymapr` `qtlpoly` `viewpoly`. If you want to download the stable version and the versions please run the following lines.
 
     install.packages(c("mappoly","polymapR","qtlpoly","viewpoly"))
 
-If you want to run the more experimental versions of the software
+If you want to run the more experimental versions of the software, run following code:
 
     install.packages("devtools")
     devtools::install_github("mmollina/MAPpoly")
@@ -29,33 +29,33 @@ If you want to run the more experimental versions of the software
 
 # Introduction
 
-This is a tutorial using a very clean dataset from array generated data on a well characterized autotetraploid garden rose mapping population that has been published already [Rose Rosette Disease Resistance Loci Detected in Two Interconnected Tetraploid Garden Rose Populations](https://www.frontiersin.org/articles/10.3389/fpls.2022.916231/full)
+This is a tutorial using a very clean dataset from a SNP array on a well characterized autotetraploid garden rose mapping population that has been published already [Rose Rosette Disease Resistance Loci Detected in Two Interconnected Tetraploid Garden Rose Populations](https://www.frontiersin.org/articles/10.3389/fpls.2022.916231/full)
 
 To download the dataset please go to: <https://github.com/jeekinlau/mapping_example/tree/main/data>
 
-Tutorial link:
+**Tutorial link:**
 
 -   <https://jeekinlau.github.io/mapping_example/tutorial/Mapping_Example.html>
 
-More in depth Tutorials from the developers"
+**More in depth Tutorials from the developers**
 
-mappoly
+**mappoly**
 
 -   <https://rpubs.com/mmollin/tetra_mappoly_vignette>
 
 -   <https://mmollina.github.io/tutorials/hexa_fake/haxaploid_map_construction.html>
 
-qtlpoly
+**qtlpoly**
 
 -   <https://gabrielgesteira.github.io/QTLpoly/docs/1-tutorial>
 
 -   <https://guilherme-pereira.github.io/QTLpoly/2-tetraploid_example.html>
 
-viewpoly
+**viewpoly**
 
 -   <https://cristianetaniguti.github.io/viewpoly_vignettes/VIEWpoly_tutorial.html>
 
-polymapR
+**polymapR**
 
 -   <https://cran.r-project.org/web/packages/polymapR/vignettes/Vignette_polymapR.html>
 
@@ -63,9 +63,11 @@ polymapR
 
 # Import the data
 
-Download the dataset and import the dataset into R. The data is organized in a way that mappoly recognizes it. must be in this format if you want to use `mappoly::read_geno_csv()` to read in your data. If you have a vcf file you can also use `mappoly::read_vcf()`
+Download the dataset and import the dataset into R. The data is organized in a way that `mappoly` recognizes it. must be in this format if you want to use `mappoly::read_geno_csv()` to read in your data. If you have a vcf file you can also use `mappoly::read_vcf()`.
 
-Normally in the `mappoly::read_geno_csv(filter.non.conforming=T)` but in this case below we set to`False` in order to do some preliminary QC done in polymapR
+Normally in the `mappoly::read_geno_csv(filter.non.conforming=T)` but in this case below we set to`False` in order to do some preliminary QC done in `polymapR`.
+
+![CSV input file](../figures/input_file_csv.jpg)
 
 ```{r}
 setwd("~/GitHub/mapping_example/tutorial")
@@ -74,7 +76,8 @@ dat = read_geno_csv(file="../data/BExMG_subset_with_contaminants_2075mrks.csv", 
 
 ```
 
-This is not part of the tutorial. mappoly is able to take VCF files and this is just showing how to import data.
+## Importing VCFs
+**This is not part of the tutorial. mappoly is able to take VCF files and this is just showing how to import data.**
 
 ```{r, eval=F}
 dat_vcf = read_vcf("../data/sweetpotato_chr1.vcf.gz", parent.1 = "PARENT1", parent.2 = "PARENT2",ploidy = 6)
@@ -82,7 +85,7 @@ dat_vcf = read_vcf("../data/sweetpotato_chr1.vcf.gz", parent.1 = "PARENT1", pare
 
 ## QC
 
-Here we will look for contaminants and duplicates and remove them from the analysis. Good idea because you have no idea what kind of errors you have in genotyping. We will use the functions the developers have implemented to help going between different software
+Here we will look for contaminants and duplicates and remove them from the analysis. Good idea because you have no idea what kind of errors you have in genotyping. We will use the functions the developers have implemented to help going between different software. What we will do here is use `polymapR` to find the contaminants and duplicate individuals and remove them from our analysis. We will produce a new genetic input file.
 
 ```{r}
 library(polymapR)
@@ -110,6 +113,9 @@ genotype_data_after_QC=genotype_data[,which(!colnames(genotype_data)%in%remove)]
 write.csv(genotype_data_after_QC,"../data/BExMG_subset_with_contaminants_2075mrks_afterQC.csv", row.names = F)
 ```
 
+
+**Read back in the new fixed genotype file**
+
 ```{r}
 setwd("~/GitHub/mapping_example/tutorial")
 library(mappoly)
@@ -121,7 +127,7 @@ dat = read_geno_csv(file="../data/BExMG_subset_with_contaminants_2075mrks_afterQ
 
 ## Filter by missing data
 
-![CSV input file](../figures/input_file_csv.jpg)
+
 
 Typically, there will be many markers filtered out when filtered by marker, or by individual. Because this is a very well curated dataset, There are no markers filtered out. Start with 0.05 or 0.10 but there are no "rules" for what level to use.
 
@@ -163,7 +169,7 @@ all.rf.pairwise = est_pairwise_rf(input.seq = seq.init, ncpus = 6)
 
 ## Plotting RF matrix
 
-Plotting the RF matrix shows a heat map of markers that are closely linked versus those that are far away. Naturally we see that those markers group into the 7 chromosomes of the Rose genome.
+Plotting the RF matrix shows a heat map of markers that are closely linked versus those that are far away. We see that those markers group into the 7 chromosomes of the Rose genome.
 
 ```{r}
 mat = rf_list_to_matrix(all.rf.pairwise)
@@ -419,7 +425,7 @@ plot_profile(data, remim.mod, sup.int = T, grid=T)
 plot_sint(data,remim.mod)
 ```
 
-fit_model calculates the variance components and estimates the
+`fit_model()` calculates all the QTL's variance components and estimates heritability of the QTL (comparable to the R-squared of the QTL)
 
 ```{r}
 fitted.mod <- fit_model(data = data, model = remim.mod, probs = "joint", polygenes = "none")

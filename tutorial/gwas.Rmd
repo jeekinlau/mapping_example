@@ -1,0 +1,119 @@
+---
+title: "gwaspoly tools for polyploid RGC11"
+author: "Jeekin Lau"
+date: "2023-03-17"
+output:   
+  html_document:
+    toc: true
+    toc_float: 
+      collapsed: false
+---
+
+```{r set-options, echo=FALSE, cache=FALSE}
+options(width = 100)
+
+```
+
+
+# Introduction
+For more in depth explanation go to https://jendelman.github.io/GWASpoly/GWASpoly.html
+We are taking the data that we just mapped and as an example showing how to do GWAS. Typically we would not use a bi-parental population for this. But for the sake of ease of showing tutorial we will use the data we used before. The only difference in this dataset is that we are using many more markers.
+
+
+# Importing data
+Genotypic data is the same as the mappoly tutorial except I changed a few columns and more markers.    
+Phenotypic data is the same as QTLpoly tutorial.
+
+```{r}
+setwd("~/GitHub/mapping_example/tutorial")
+library(GWASpoly)
+
+genofile = "../data/BExMG_dosageGWAS.csv"
+phenofile = "../data/blackspot_cercospora_defoliation_RRD.csv"
+
+data <- read.GWASpoly(ploidy=4, pheno.file=phenofile, geno.file=genofile,
+                      format="numeric", n.traits=5, delim=",")
+
+```
+# Accounting for population structure
+Old method used all markers for a covariance matrix called K model.    
+New method uses all other markers in other chromosome to calculate a covariance matrix for the chromosome that is left out LOCO means "Leave one chromosome out".
+
+```{r}
+data.loco <- set.K(data,LOCO=TRUE,n.core=4)
+data.original <- set.K(data,LOCO=FALSE,n.core=4)
+```
+
+
+This filters for minor allele frequency
+```{r}
+N <- 160 #Population size
+params <- set.params(geno.freq = 1 - 5/N)
+traits_names = colnames(data@pheno)[2:6]
+```
+
+
+# GWAS
+If you want to run one trait at a time then run "trait" if you want to run all of the traits insert a vector of names of the traits. For the purposes of this tutorial let's just run one trait for the sake of time.
+
+```{r}
+data.loco.scan <- GWASpoly(data=data.loco,models=c("additive","1-dom","2-dom", "diplo-general", "diplo-additive", "general"),
+                           traits="blackspot",params=params,n.core=4)
+
+data.original.scan <- GWASpoly(data.original,models=c("additive","1-dom","2-dom", "diplo-general", "diplo-additive", "general"),
+                           traits="blackspot",params=params,n.core=4)                   
+                               
+```
+
+# QQ-plots
+
+```{r}
+library(ggplot2)
+qq.plot(data.original.scan, trait = "blackspot") + ggtitle(label="Original")
+qq.plot(data.loco.scan,trait= "blackspot") + ggtitle(label="LOCO")
+```
+
+
+```{r}
+data2 <- set.threshold(data.loco.scan,method="Bonferroni",level=0.05)
+data3 <- set.threshold(data.original.scan,method="Bonferroni",level=0.05)
+data4 <- set.threshold(data.loco.scan,method="M.eff",level=0.05)
+
+p <- manhattan.plot(data2,traits="blackspot")
+p + theme(axis.text.x = element_text(angle=90,vjust=0.5))
+
+p <- manhattan.plot(data3,traits="blackspot")
+p + theme(axis.text.x = element_text(angle=90,vjust=0.5))
+
+p <- manhattan.plot(data4,traits="blackspot")
+p + theme(axis.text.x = element_text(angle=90,vjust=0.5))
+```
+
+# LD to deterimine window to look for peak
+In a bi-parental mapping population family, there are huge linkage blocks being inherited together thus the LD plot decay will be much different than a diversity panel. What this plot tells us is to set our bp.window to around 20 to 25 million base pairs.
+
+```{r}
+p <- LD.plot(data2)
+p + xlim(0,100) 
+```
+
+
+
+```{r}
+qtl <- get.QTL(data=data2,traits="blackspot",models="additive",bp.window=20000000)
+print(qtl)
+```
+
+
+```{r}
+fit.ans <- fit.QTL(data=data2,trait="blackspot",
+                   qtl=qtl[,c("Marker","Model")],
+                   fixed=data.frame(Effect="env",Type="factor"))
+print(fit.ans)
+```
+
+
+
+
+
+
