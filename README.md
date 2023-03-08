@@ -1,6 +1,6 @@
 # mapping_example
-Mapping Example for Polyploid computational support session
+Mapping Examples tutorial material for RGC11 tools for polyploid workshop.
 
-Contains the files and tutorial we will follow on day two of computational support
+[Linakge Mapping and QTL mapping (RGC11 tutorial)](https://jeekinlau.github.io/mapping_example/tutorial/Mapping_Example.html)
 
-[Tutorial link](https://jeekinlau.github.io/mapping_example/tutorial/Mapping_Example.html)
+[GWASpoly(RGC11 tutorial)](https://jeekinlau.github.io/mapping_example/tutorial/gwas.html)
