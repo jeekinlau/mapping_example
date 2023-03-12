@@ -22,7 +22,12 @@ We are taking the data that we just mapped and as an example showing how to do G
 
 # Importing data
 Genotypic data is the same as the mappoly tutorial except I changed a few columns and more markers.    
-Phenotypic data is the same as QTLpoly tutorial.
+Phenotypic data is the same as QTLpoly tutorial.    
+
+Format of data can be numeric dosages (0,1,2,3,4) for tetraploid, or it can be "AB" format so "AAAA" "AAAB" etc., or it can be"ACGT" AAAT or GGCC for example. In our case we are just using the numeric format.
+
+NOTE: Missing values are imputed to by the population mode (most frequent value)
+
 
 ```{r}
 setwd("~/GitHub/mapping_example/tutorial")
@@ -97,13 +102,15 @@ p <- LD.plot(data2)
 p + xlim(0,100) 
 ```
 
-
+Next few lines of code will tell you the peaks of the QTL and the lod scores
 
 ```{r}
 qtl <- get.QTL(data=data2,traits="blackspot",models="additive",bp.window=20000000)
 print(qtl)
 ```
 
+
+The `fit.QTL()` function, estimates the R-squared of the QTL.  
 
 ```{r}
 fit.ans <- fit.QTL(data=data2,trait="blackspot",
