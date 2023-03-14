@@ -346,6 +346,9 @@ plot(homolog_probs, lg = 1, ind = 1)
 
 The HMM chain will make small changes to the progeny genotype calls (dosage) so it fits the better in the map. As you increase the global error rate, you allow the chain more freedom to make more changes. This is represented in the figure below. ![HMM chain imputation and changing genoptypes](../figures/impute_changed.jpeg)
 
+
+
+
 # QTLpoly for QTL analysis
 
 MAPpoly's sister software QTLpoly was made to take the outputs of MAPpoly to do QTL mapping. There are two main ways in QTLpoly REMIM random-effect multiple interval mapping and FEIM fixed effect interval mapping.
@@ -453,3 +456,7 @@ save(remim.mod, file = "../viewpoly_files/QTLpoly_remim.mod.RData")
 save(est.effects, file = "../viewpoly_files/QTLpoly_est.effects.RData")
 save(fitted.mod, file = "../viewpoly_files/QTLpoly_fitted.mod.RData") 
 ```
+
+
+
+
