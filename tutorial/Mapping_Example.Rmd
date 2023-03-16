@@ -1,5 +1,5 @@
 ---
-title: "Mapping Example Tools for Polyploid RGC11"
+title: "Mapping and QTL Example Tools for Polyploid RGC11"
 author: "Jeekin Lau"
 date: "2023-03-17"
 output:   
